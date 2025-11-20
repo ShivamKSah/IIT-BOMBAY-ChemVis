@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        allowedHosts: ['iit-bombay-chemvis.onrender.com']
       },
       plugins: [react()],
       define: {

@@ -3,7 +3,7 @@ import { DatasetRecord } from "../types";
 // We declare jsPDF locally to avoid Typescript errors since it's loaded via CDN
 declare const jspdf: any;
 
-export const generatePDF = (dataset: DatasetRecord) => {
+export const generatePDF = (dataset: DatasetRecord, aiAnalysis?: string | null) => {
     try {
         const { jsPDF } = jspdf;
         const doc = new jsPDF();
@@ -52,7 +52,23 @@ export const generatePDF = (dataset: DatasetRecord) => {
             headStyles: { fillColor: [46, 204, 113] }
         });
 
+        // AI Engineering Analysis Summary (if available)
+        if (aiAnalysis) {
+            doc.addPage();
+            doc.setFontSize(16);
+            doc.setTextColor(0);
+            doc.text("AI Engineering Analysis Summary", 20, 20);
+            
+            doc.setFontSize(12);
+            // Split the AI analysis text into lines that fit the page width
+            const splitText = doc.splitTextToSize(aiAnalysis, 170);
+            doc.text(splitText, 20, 35);
+        }
+
         // Data Snapshot (First 20 rows)
+        const startYPosition = aiAnalysis ? 40 + (aiAnalysis.length / 50) : 25;
+        const finalY = aiAnalysis ? doc.lastAutoTable?.finalY || startYPosition : doc.lastAutoTable?.finalY || 25;
+        
         doc.addPage();
         doc.text("Raw Data Snapshot (Top 20)", 20, 20);
 

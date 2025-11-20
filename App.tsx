@@ -55,7 +55,7 @@ const App: React.FC = () => {
 
     const handleGenerateReport = () => {
         if (currentDataset) {
-            generatePDF(currentDataset);
+            generatePDF(currentDataset, aiAnalysis);
         }
     };
 

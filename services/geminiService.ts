@@ -8,14 +8,18 @@ let ai: GoogleGenAI | null = null;
 const getAI = () => {
     if (!ai) {
         // Check if API key is available from various sources
-        // Vite exposes env variables with import.meta.env
-        const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-                      process.env.VITE_GEMINI_API_KEY || 
-                      process.env.API_KEY || 
-                      process.env.GEMINI_API_KEY;
+        // Try multiple ways to access the environment variable
+        const apiKey = typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY ||
+                      (typeof window !== 'undefined' && (window as any).VITE_GEMINI_API_KEY) ||
+                      (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+                      process.env?.API_KEY ||
+                      process.env?.GEMINI_API_KEY ||
+                      '';
         
-        if (!apiKey) {
-            throw new Error("API Key not found. Please set VITE_GEMINI_API_KEY environment variable.");
+        if (!apiKey || apiKey === 'your_actual_api_key_here') {
+            // Instead of throwing an error, we'll log a warning and return null
+            console.warn("API Key not found or is placeholder value. AI features will be disabled.");
+            return null;
         }
         ai = new GoogleGenAI({ apiKey });
     }
@@ -26,6 +30,12 @@ export const analyzeDataset = async (dataset: DatasetRecord): Promise<string> =>
     try {
         // Initialize AI client when needed
         const aiClient = getAI();
+        
+        // If no API key is available, return a friendly message
+        if (!aiClient) {
+            return "AI analysis is currently unavailable. Please contact the administrator to configure the API key.";
+        }
+        
         const model = 'gemini-2.5-flash';
         
         const prompt = `
@@ -61,8 +71,8 @@ export const analyzeDataset = async (dataset: DatasetRecord): Promise<string> =>
         console.error("Gemini Analysis Error:", error);
         // Provide a more user-friendly error message
         if (error instanceof Error && error.message.includes("API Key")) {
-            return "Error: API key is missing or invalid. Please check your environment configuration.";
+            return "Error: API key is missing or invalid. Please contact the administrator to configure the API key.";
         }
-        return "Error generating analysis. Please check your API key configuration.";
+        return "Error generating analysis. Please contact the administrator to check the API key configuration.";
     }
 };

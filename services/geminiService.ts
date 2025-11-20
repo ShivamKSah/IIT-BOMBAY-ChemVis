@@ -8,17 +8,26 @@ let ai: GoogleGenAI | null = null;
 const getAI = () => {
     if (!ai) {
         // Check if API key is available from various sources
-        // Try multiple ways to access the environment variable
-        const apiKey = typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY ||
+        // This approach works for both Vercel and other deployment platforms
+        const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+                      (typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY) ||
                       (typeof window !== 'undefined' && (window as any).VITE_GEMINI_API_KEY) ||
-                      (import.meta as any).env?.VITE_GEMINI_API_KEY ||
-                      process.env?.API_KEY ||
-                      process.env?.GEMINI_API_KEY ||
+                      (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) ||
+                      (import.meta as any).env?.GEMINI_API_KEY ||
                       '';
         
-        if (!apiKey || apiKey === 'your_actual_api_key_here') {
-            // Instead of throwing an error, we'll log a warning and return null
-            console.warn("API Key not found or is placeholder value. AI features will be disabled.");
+        // Log the API key status for debugging (without exposing the actual key)
+        console.log('API Key Status:', {
+            hasViteEnvKey: !!(import.meta as any).env?.VITE_GEMINI_API_KEY,
+            hasProcessEnvViteKey: !!(typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY),
+            hasWindowKey: !!(typeof window !== 'undefined' && (window as any).VITE_GEMINI_API_KEY),
+            hasProcessEnvKey: !!(typeof process !== 'undefined' && process.env?.GEMINI_API_KEY),
+            hasImportMetaEnvKey: !!(import.meta as any).env?.GEMINI_API_KEY,
+            keyLength: apiKey ? apiKey.length : 0
+        });
+        
+        if (!apiKey || apiKey.length < 20) { // Basic validation - real keys are longer
+            console.warn("Valid API Key not found. AI features will be disabled.");
             return null;
         }
         ai = new GoogleGenAI({ apiKey });
@@ -33,7 +42,7 @@ export const analyzeDataset = async (dataset: DatasetRecord): Promise<string> =>
         
         // If no API key is available, return a friendly message
         if (!aiClient) {
-            return "AI analysis is currently unavailable. Please contact the administrator to configure the API key.";
+            return "AI analysis is currently unavailable. Please ensure the administrator has configured a valid API key.";
         }
         
         const model = 'gemini-2.5-flash';
@@ -71,8 +80,8 @@ export const analyzeDataset = async (dataset: DatasetRecord): Promise<string> =>
         console.error("Gemini Analysis Error:", error);
         // Provide a more user-friendly error message
         if (error instanceof Error && error.message.includes("API Key")) {
-            return "Error: API key is missing or invalid. Please contact the administrator to configure the API key.";
+            return "Error: Invalid API key. Please contact the administrator to configure a valid API key.";
         }
-        return "Error generating analysis. Please contact the administrator to check the API key configuration.";
+        return "Error generating analysis. Please contact the administrator. Technical details: " + (error as Error).message;
     }
 };

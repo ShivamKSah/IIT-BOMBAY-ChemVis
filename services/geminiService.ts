@@ -7,10 +7,15 @@ let ai: GoogleGenAI | null = null;
 // Function to initialize the AI client when needed
 const getAI = () => {
     if (!ai) {
-        // Check if API key is available
-        const apiKey = process.env.API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        // Check if API key is available from various sources
+        // Vite exposes env variables with import.meta.env
+        const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                      process.env.VITE_GEMINI_API_KEY || 
+                      process.env.API_KEY || 
+                      process.env.GEMINI_API_KEY;
+        
         if (!apiKey) {
-            throw new Error("API Key not found. Please set API_KEY, VITE_GEMINI_API_KEY, or GEMINI_API_KEY environment variable.");
+            throw new Error("API Key not found. Please set VITE_GEMINI_API_KEY environment variable.");
         }
         ai = new GoogleGenAI({ apiKey });
     }

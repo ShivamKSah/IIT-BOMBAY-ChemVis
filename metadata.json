@@ -1,0 +1,5 @@
+{
+  "name": "ChemVis - Equipment Parameter Visualizer",
+  "description": "A hybrid analytical dashboard for Chemical Equipment parameters. Features CSV processing, data visualization, historical tracking, and AI-powered insight generation.",
+  "requestFramePermissions": []
+}
